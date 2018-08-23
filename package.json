@@ -1,0 +1,24 @@
+{
+  "name": "centralrouter-http-interface",
+  "version": "1.0.0",
+  "description": "HTTP Client Interface for CentralRouterJS.",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CentralRouterJS/centralrouter-http-interface.git"
+  },
+  "author": "LeFizzy",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/CentralRouterJS/centralrouter-http-interface/issues"
+  },
+  "homepage": "https://github.com/CentralRouterJS/centralrouter-http-interface#readme",
+  "dependencies": {
+    "dotenv": "^6.0.0",
+    "request": "^2.88.0",
+    "socket.io-client": "^2.1.1"
+  }
+}
