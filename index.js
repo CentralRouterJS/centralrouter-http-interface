@@ -4,10 +4,21 @@ const request = require('request');
 const appHost = process.env.LOCAL_APP_HOST      || "localhost";
 const appPort = process.env.LOCAL_APP_PORT      || 8080;
 const wssHost = process.env.CENTRAL_WSS_HOST    || "localhost";
-const wssPort = process.env.CENTRAL_WSS_PORT    || 1337;
+const wssPort = process.env.CENTRAL_WSS_PORT    || 8081;
 
-request(`http://${appHost}:${appPort}`, (err, res, body) => {
-    if(err) throw err;
+const socket = require('socket.io-client')(`http://${wssHost}:${wssPort}`);
+socket.on('connect', () => {
+    console.log('Connected to CentralRouter instance.');
+});
 
-    console.log(body);
+socket.on('wss.interfaces.hello', (data) => {
+    console.log(data);
+});
+
+socket.on('interfaces.http.request', (httpdata) => {
+    console.log(httpdata);
+});
+
+socket.on('disconnect', () => {
+    console.log('Disconnected from CentralRouter instance.');
 });
