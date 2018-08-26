@@ -17,6 +17,8 @@ socket.on('wss.interfaces.hello', (data) => {
 
 socket.on('interfaces.http.request', (httpdata) => {
     console.log(httpdata);
+
+    socket.emit('interfaces.http.response', 'Welcome to my Instance!');
 });
 
 socket.on('disconnect', () => {
