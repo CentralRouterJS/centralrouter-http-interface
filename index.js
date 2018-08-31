@@ -15,9 +15,7 @@ socket.on('wss.interfaces.hello', (data) => {
     console.log(data);
 });
 
-socket.on('interfaces.http.request', (httpdata) => {
-    console.log(httpdata);
-
+socket.on('interfaces.http.get', (httpdata) => {
     request(`http://${appHost}:${appPort}${httpdata}`, (error, response, body) => {
         if(error) throw error;
          
@@ -26,6 +24,22 @@ socket.on('interfaces.http.request', (httpdata) => {
             bodyData: body
         });
     });
+});
+
+socket.on('interfaces.http.post', (postdata) => {
+    const httpRoute = postdata.route;
+    const httpData  = postdata.data;
+
+    request.post({ 
+        url: `http://${appHost}:${appPort}${httpRoute}`, 
+        form: {httpData}}, (error, response, body) => {
+            if(error) throw error;
+
+            socket.emit('interfaces.http.response', {
+                statusCode: response.statusCode,
+                bodyData: body
+            });
+        });
 });
 
 socket.on('disconnect', () => {
