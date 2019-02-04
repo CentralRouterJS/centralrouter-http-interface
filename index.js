@@ -18,7 +18,8 @@ socket.on('wss.interfaces.hello', (data) => {
 socket.on('interfaces.http.get', (httpdata) => {
     request(`http://${appHost}:${appPort}${httpdata}`, (error, response, body) => {
         if(error) throw error;
-         
+        
+	    console.log(`[GET] ${httpdata}`); 
         socket.emit('interfaces.http.response', {
             statusCode: response.statusCode,
             bodyData: body
@@ -35,6 +36,7 @@ socket.on('interfaces.http.post', (postdata) => {
         form: {httpData}}, (error, response, body) => {
             if(error) throw error;
 
+            console.log(`[POST] ${httpData}`); 
             socket.emit('interfaces.http.response', {
                 statusCode: response.statusCode,
                 bodyData: body
