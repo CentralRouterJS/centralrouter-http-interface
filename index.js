@@ -1,5 +1,6 @@
 const dotenv = require('dotenv').config();
 const request = require('request');
+const staticHandler = require('./lib/staticHandler');
 
 const appHost = process.env.LOCAL_APP_HOST      || "localhost";
 const appPort = process.env.LOCAL_APP_PORT      || 80;
