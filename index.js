@@ -2,6 +2,7 @@ const dotenv = require('dotenv').config();
 const request = require('request');
 const staticHandler = require('./lib/staticHandler');
 const queryHandler = require('./lib/queryHandler');
+const extensionHandler = require('./lib/extensionHandler');
 
 // APP-wide variables specified in Dotenv (with fallback values).
 const appHost = process.env.LOCAL_APP_HOST      || "localhost";
@@ -23,16 +24,30 @@ socket.on('wss.interfaces.hello', (data) => {
 
 // Listen for the GET requests sent to the local hidden network.
 socket.on('interfaces.http.get', (httpdata) => {
-    console.log(`[GET] ${httpdata}`); 
 
-    request(`http://${appHost}:${appPort}${httpdata}`, (error, response, body) => {
-        if(error) throw error;
-        
+    // Check if req contains an extension.
+    // If so, then handle the request with the static handler.
+    // Else with the query handler.
+    if ( extensionHandler.check(httpdata) ) {
+        // Wait for response from the static handler.
+        const response = staticHandler.passGetRequest( appHost, appPort, httpdata );
+
+        // Pass the response back to WSS.
         socket.emit('interfaces.http.response', {
             statusCode: response.statusCode,
-            bodyData: body
+            bodyData: response.body
         });
-    });
+    } else {
+        // Wait for response from the query handler.
+        const response = queryHandler.passGetRequest( appHost, appPort, httpdata );
+        
+        // Pass the response back to WSS.
+        socket.emit('interfaces.http.response', {
+            statusCode: response.statusCode,
+            bodyData: response.body
+        });
+    }
+
 });
 
 // Listen for the POST requests sent to the local hidden network.
