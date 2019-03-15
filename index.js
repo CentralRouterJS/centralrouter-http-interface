@@ -5,10 +5,10 @@ const queryHandler = require('./lib/queryHandler');
 const extensionHandler = require('./lib/extensionHandler');
 
 // APP-wide variables specified in Dotenv (with fallback values).
-const appHost = process.env.LOCAL_APP_HOST      || "localhost";
-const appPort = process.env.LOCAL_APP_PORT      || 80;
-const wssHost = process.env.CENTRAL_WSS_HOST    || "localhost";
-const wssPort = process.env.CENTRAL_WSS_PORT    || 8081;
+const appHost = process.env.LOCAL_APP_HOST || "localhost";
+const appPort = process.env.LOCAL_APP_PORT || 80;
+const wssHost = process.env.CENTRAL_WSS_HOST || "localhost";
+const wssPort = process.env.CENTRAL_WSS_PORT || 8081;
 
 const socket = require('socket.io-client')(`http://${wssHost}:${wssPort}`);
 
@@ -28,46 +28,49 @@ socket.on('interfaces.http.get', (httpdata) => {
     // Check if req contains an extension.
     // If so, then handle the request with the static handler.
     // Else with the query handler.
-    if ( extensionHandler.check(httpdata) ) {
-        // Wait for response from the static handler.
-        const response = staticHandler.passGetRequest( appHost, appPort, httpdata );
-
-        // Pass the response back to WSS.
-        socket.emit('interfaces.http.response', {
-            statusCode: response.statusCode,
-            bodyData: response.body
-        });
-    } else {
-        // Wait for response from the query handler.
-        const response = queryHandler.passGetRequest( appHost, appPort, httpdata );
-        
-        // Pass the response back to WSS.
-        socket.emit('interfaces.http.response', {
-            statusCode: response.statusCode,
-            bodyData: response.body
-        });
-    }
-
+    extensionHandler.check(httpdata, (routeWithExtension) => {
+        if (routeWithExtension) {
+            // Wait for response from the static handler.
+            staticHandler.passGetRequest(appHost, appPort, httpdata, (fileName) => {
+                if (fileName) {
+                    // Pass the response back to WSS.
+                    ss(socket).emit('interfaces.http.response.static', stream, ({ fileName: fileName }));
+                    fs.createReadStream(__dirname + '/../public/' + fileName).pipe(stream);
+                }
+            });
+        } else {
+            // Wait for response from the query handler.
+            queryHandler.passGetRequest(appHost, appPort, httpdata, (responseData) => {
+                if (responseData) {
+                    // Pass the response back to WSS.
+                    socket.emit('interfaces.http.response', {
+                        statusCode: responseData.statusCode,
+                        bodyData: responseData.body
+                    });
+                }
+            });
+        }
+    });
 });
 
 // Listen for the POST requests sent to the local hidden network.
 socket.on('interfaces.http.post', (postdata) => {
     const httpRoute = postdata.route;
-    const httpData  = postdata.data;
+    const httpData = postdata.data;
 
-    console.log(`[POST] ${httpData}`); 
+    console.log(`[POST] ${httpData}`);
 
-    request.post({ 
-        url: `http://${appHost}:${appPort}${httpRoute}`, 
-        form: {httpData}}, (error, response, body) => {
-            if(error) throw error;
+    request.post({
+        url: `http://${appHost}:${appPort}${httpRoute}`,
+        form: { httpData }
+    }, (error, response, body) => {
+        if (error) throw error;
 
-            
-            socket.emit('interfaces.http.response', {
-                statusCode: response.statusCode,
-                bodyData: body
-            });
+        socket.emit('interfaces.http.response', {
+            statusCode: response.statusCode,
+            bodyData: body
         });
+    });
 });
 
 // Disconnect handler for the WSS.
